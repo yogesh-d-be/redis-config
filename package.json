@@ -1,19 +1,44 @@
 {
   "name": "infra-redis-config",
-  "version": "1.0.0",
-  "description":"Redis configuration",
+  "version": "1.0.1",
+  "description": "Reusable Redis and Redis Cluster configuration for CommonJS projects (supports TLS, graceful shutdown, and logging)",
   "main": "./index.js",
+  "type": "commonjs",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint .",
+    "prepare": "echo 'Ready to publish 🚀'",
+    "test": "echo 'No tests yet. Add tests before production!' && exit 0"
   },
- "publishConfig": {
-    "registry": "https://package.99wincart.com/"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yogesh-d-be/redis-config.git"
   },
-
-  "keywords": [],
-  "author": "Yogesh D",
-  "license": "ISC",
+  "keywords": [
+    "redis",
+    "redis-cluster",
+    "redis-config",
+    "ioredis",
+    "commonjs",
+    "microservices",
+    "infrastructure",
+    "shared-config"
+  ],
+  "author": "Yogesh D <yogesh.d.be@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "ioredis": "^5.6.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://package.99wincart.com/"
   }
 }
