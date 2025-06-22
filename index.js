@@ -1,7 +1,13 @@
 const Redis = require('ioredis');
+const dns = require('dns');
 
 let redisInstance = null;
 
+/**
+ * Initializes Redis instance (standalone or cluster)
+ * @param {Object} config
+ * @returns {Redis | Redis.Cluster}
+ */
 function initRedis(config = {}) {
   if (redisInstance) return redisInstance;
 
@@ -42,12 +48,14 @@ function initRedis(config = {}) {
       scaleReads: scaleReadsFromReplicas ? 'slave' : 'master',
       slotsRefreshTimeout: 2000,
       slotsRefreshInterval: 10000,
-      dnsLookup: (address, callback) => callback(null, address),
+      dnsLookup: (address, callback) =>
+        dns.lookup(address, { family: 4 }, callback),
     });
   } else {
     redisInstance = new Redis({ host, port, ...redisOptions });
   }
 
+  // Logging Redis events
   redisInstance.on('connect', () => logger.log('✅ Redis connected'));
   redisInstance.on('ready', () => logger.log('🚀 Redis ready'));
   redisInstance.on('error', (err) => logger.error('❌ Redis error:', err));
@@ -55,7 +63,14 @@ function initRedis(config = {}) {
   redisInstance.on('close', () => logger.warn('🔌 Redis connection closed'));
   redisInstance.on('end', () => logger.warn('🛑 Redis connection ended'));
 
+  // Immediate health ping
+  redisInstance.ping().then(() => {
+    logger.log('📶 Redis ping successful');
+  }).catch(err => {
+    logger.warn('⚠️ Redis ping failed on init:', err.message);
+  });
 
+  // Graceful shutdown
   process.on('SIGINT', async () => {
     if (redisInstance) {
       await redisInstance.quit();
@@ -67,7 +82,10 @@ function initRedis(config = {}) {
   return redisInstance;
 }
 
-
+/**
+ * Get Redis instance after initialization
+ * @returns {Redis | Redis.Cluster}
+ */
 function getRedis() {
   if (!redisInstance) {
     throw new Error('❌ Redis not initialized. Call initRedis() first.');
@@ -75,9 +93,9 @@ function getRedis() {
   return redisInstance;
 }
 
-
-// Close the current Redis connection manually.
-
+/**
+ * Close Redis connection manually
+ */
 async function closeRedis() {
   if (redisInstance) {
     await redisInstance.quit();
@@ -85,8 +103,22 @@ async function closeRedis() {
   }
 }
 
+/**
+ * Check if Redis is responsive
+ * @returns {Promise<boolean>}
+ */
+async function isRedisHealthy() {
+  try {
+    await getRedis().ping();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
   initRedis,
   getRedis,
   closeRedis,
+  isRedisHealthy
 };
